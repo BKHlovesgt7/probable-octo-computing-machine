@@ -1,5 +1,6 @@
 name: Build Python Executables
-
+permissions:
+  contents: write
 on:
   workflow_dispatch:
     inputs:

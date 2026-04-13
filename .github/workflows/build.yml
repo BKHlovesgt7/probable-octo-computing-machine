@@ -57,24 +57,24 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-
+  
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+  
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-
+  
       - name: Make files executable (Linux/Mac)
-        run: chmod +x build/* || true
-
+        run: chmod +x **/* || true
+  
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ github.event.inputs.version }}
           name: Release ${{ github.event.inputs.version }}
-          files: |
-            build/**
+          files: "**"
+

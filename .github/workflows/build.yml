@@ -22,7 +22,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python
+      # Only run setup-python on GitHub-hosted runners
+      - name: Setup Python (GitHub-hosted only)
+        if: runner.os != 'Linux'
         uses: actions/setup-python@v5
         with:
           python-version: "3.13.7"
@@ -31,9 +33,9 @@ jobs:
           cache-dependency-path: |
             **/requirements*.txt
 
+      # Install dependencies (works on both local + GitHub runners)
       - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: Build Executable with Nuitka
         uses: Nuitka/Nuitka-Action@main
@@ -57,19 +59,19 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
-  
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-  
+
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
-  
+
       - name: Make files executable (Linux/Mac)
         run: chmod +x **/* || true
-  
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -77,4 +79,3 @@ jobs:
           tag_name: ${{ github.event.inputs.version }}
           name: Release ${{ github.event.inputs.version }}
           files: "**"
-

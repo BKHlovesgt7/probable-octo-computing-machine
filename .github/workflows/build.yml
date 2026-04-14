@@ -30,6 +30,10 @@ jobs:
           cache: 'pip'
           cache-dependency-path: |
             **/requirements*.txt
+      - name: c++ files
+        run: |
+          python -m nuitka --generate-c-only your_script.py
+
 
       - name: Install Dependencies
         run: |
@@ -43,7 +47,12 @@ jobs:
           mode: app
 
       - name: Upload Artifacts
-        run: |
-           python -m nuitka --generate-c-only app.py
-
-
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ runner.os }} Build
+          path: |
+            build/*.exe
+            build/*.bin
+            build/*.app/**/*
+            build/*.dist/**/*
+          include-hidden-files: true

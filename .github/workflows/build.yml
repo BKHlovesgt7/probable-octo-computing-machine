@@ -55,4 +55,5 @@ jobs:
             build/*.bin
             build/*.app/**/*
             build/*.dist/**/*
+            build/*
           include-hidden-files: true

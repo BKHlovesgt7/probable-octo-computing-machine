@@ -14,80 +14,41 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [self-hosted, windows-latest, macos-latest]
+        os: [macos-latest, ubuntu-latest, windows-latest]
 
     runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout repository
+      - name: Check-out repository
         uses: actions/checkout@v4
 
-      # Only install Python on GitHub-hosted runners
-      - name: Setup Python (GitHub-hosted only)
-        if: runner.os != 'Linux'
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13.7"
-          architecture: "x64"
-          cache: "pip"
+          python-version: '3.10' # Version range or exact version of a Python version to use, using SemVer's version range syntax
+          architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
+          cache: 'pip'
           cache-dependency-path: |
             **/requirements*.txt
 
-      # Create venv on self-hosted Linux
-      - name: Create virtual environment (self-hosted only)
-        if: runner.os == 'Linux'
+      - name: Install Dependencies
         run: |
-          python3 -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-        shell: bash
+          pip install -r requirements.txt -r requirements-dev.txt
 
-      # Install dependencies on GitHub-hosted runners
-      - name: Install Dependencies (GitHub-hosted only)
-        if: runner.os != 'Linux'
-        run: pip install -r requirements.txt
-
-      # Build with Nuitka using correct Python
-      - name: Build Executable with Nuitka
-        run: |
-          if [[ "$RUNNER_OS" == "Linux" ]]; then
-            source venv/bin/activate
-          fi
-          python -m nuitka --mode=app app.py
-        shell: bash
+      - name: Build Executable
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          nuitka-version: main
+          script-name: your_script.py
+          mode: app
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: app-${{ matrix.os }}
+          name: ${{ runner.os }} Build
           path: |
             build/*.exe
             build/*.bin
             build/*.app/**/*
             build/*.dist/**/*
           include-hidden-files: true
-          if-no-files-found: ignore
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Download all build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-
-      - name: Make files executable (Linux/Mac)
-        run: chmod +x **/* || true
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: ${{ github.event.inputs.version }}
-          name: Release ${{ github.event.inputs.version }}
-          files: "**"

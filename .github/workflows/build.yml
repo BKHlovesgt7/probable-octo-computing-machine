@@ -32,7 +32,7 @@ jobs:
             **/requirements*.txt
       - name: c++ files
         run: |
-          python -m nuitka --generate-c-only your_script.py
+          python -m nuitka --generate-c-only app.py
 
 
       - name: Install Dependencies
